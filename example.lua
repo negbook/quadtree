@@ -21,7 +21,7 @@ for i=1,1000 do
         somedata = "test"..i
     })
 end
---[[
+
 for i=1,1000 do 
     local x = math.random(0,8000)
     local y = math.random(0,8000)
@@ -32,7 +32,7 @@ for i=1,1000 do
         somedata = "asd"..i
     })
 end
---]]
+
 print(tree)
 print(tree.topleft)
 print(tree.topright)
@@ -71,4 +71,17 @@ end
 print("boxes by circle",#tree:query_boxes_by_circle({
     center = vector3(222.0,4000.0,30.0),
     radius = 1000
+}))
+
+
+print("circles by rectangle",#tree:query_circles_by_rectangle({
+    center = vector3(222.0,4000.0,30.0),
+    size = vector3(400.0,400.0,400.0)
+}))
+
+print("circles by point",#tree:query_circles_by_point(vector3(1.0,1.0,30.0)))
+
+print("circles by circle",#tree:query_circles_by_circle({
+    center = vector3(4000.0,4000.0,30.0),
+    radius = 555
 }))

@@ -87,4 +87,22 @@ print("circles by point",#tree:query_circles_by_point(vector3(1.0,1.0,30.0)))
 
 print("circles by circle",#tree:query_circles_by_point(vector3(1.0,1.0,30.0),100000))
 
+for i=1,1000 do 
+    local x = math.random(0,8000)
+    local y = math.random(0,8000)
+    local z = math.random(0,8000)
+    tree:insert_boundingbox({
+        min = vector3(x-100,y-100,z-100),
+        max = vector3(x+100,y+100,z+100),
+        IamMinMaxBox = true
+    })
+end
+
+print("boundingboxes by point",#tree:query_boundingboxes_by_point(vector3(1.0,1.0,30.0),500))
+local boundingboxes = tree:query_boundingboxes_by_point(vector3(1.0,1.0,30.0))
+for i,v in pairs(boundingboxes) do 
+    if v.IamMinMaxBox then 
+        --print("boundingboxes",i)
+    end 
+end 
 ```

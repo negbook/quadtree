@@ -18,12 +18,12 @@ function QuadTree.new(boundary, capacity)
         points = {},
         circles = {},
         boxes = {},
-        polygons = {},
+        boundingboxes = {},
         isdivided = false
     }, {
         __index = QuadTree,
         __tostring = function(self)
-            return "QuadTree: center: "..self.center.x.." "..self.center.y.." width: "..self.width.." height: "..self.height.." capacity: "..self.capacity.." points: "..#self.points.. " boxes: "..#self.boxes.. " polygons: "..#self.polygons.. " isdivided: "..tostring(self.isdivided)
+            return "QuadTree: center: "..self.center.x.." "..self.center.y.." width: "..self.width.." height: "..self.height.." capacity: "..self.capacity.." points: "..#self.points.. " boxes: "..#self.boxes.. " boundingboxes: "..#self.boundingboxes.. " isdivided: "..tostring(self.isdivided)
             
         end
     })
@@ -134,15 +134,15 @@ local GetMinMax = function(b)
    local max = vector2(b.center.x + b.size.x/2, b.center.y + b.size.y/2)
    return min, max
 end
-function QuadTree:inner_box_contains(box,min,max)
+
+function QuadTree:inner_box_contains(box)
     local min1, max1 = GetMinMax(self)
     local min2, max2 = GetMinMax(box)
-    if min and max then min2 , max2 = min, max end
     return min1.x <= min2.x and max1.x >= max2.x and min1.y <= min2.y and max1.y >= max2.y
 end
 
-function QuadTree:insert_box(box,min,max)
-    if not self:inner_box_contains(box,min,max) then
+function QuadTree:insert_box(box)
+    if not self:inner_box_contains(box) then
         return false
     end
     if #self.boxes < self.capacity then
@@ -256,6 +256,70 @@ function QuadTree:query_circles_by_point(point, radius, found)
         self.bottomright:query_circles_by_point(point, radius, found)
         self.bottomleft:query_circles_by_point(point, radius, found)
         self.topleft:query_circles_by_point(point, radius, found)
+    end
+    return found
+end
+
+function QuadTree:inner_boundingbox_contains(min,max)
+    local min1, max1 = GetMinMax(self)
+    local min2, max2 = min,max
+    return min1.x <= min2.x and max1.x >= max2.x and min1.y <= min2.y and max1.y >= max2.y
+end
+
+function QuadTree:insert_boundingbox(boundingbox)
+    local min,max = boundingbox.min,boundingbox.max
+    if not self:inner_boundingbox_contains(min,max) then
+        return false
+    end
+    if #self.boundingboxes < self.capacity then
+        table.insert(self.boundingboxes, boundingbox)
+        return true
+    else 
+        if not self.isdivided then
+            self:inner_subdivide()
+        end
+        if self.topright:insert_boundingbox(boundingbox) then
+            return true
+        elseif self.bottomright:insert_boundingbox(boundingbox) then
+            return true
+        elseif self.bottomleft:insert_boundingbox(boundingbox) then
+            return true
+        elseif self.topleft:insert_boundingbox(boundingbox) then
+            return true
+        end
+    end
+end
+
+function QuadTree:query_boundingboxes_by_rectangle(rectrange, found,min,max)
+    found = found or {}
+    if not self:inner_intersects(rectrange) then
+        return found
+    end
+    for i, boundingbox in ipairs(self.boundingboxes) do
+        table.insert(found, boundingbox)
+    end
+    if self.isdivided then
+        self.topright:query_boundingboxes_by_rectangle(rectrange, found,min,max)
+        self.bottomright:query_boundingboxes_by_rectangle(rectrange, found,min,max)
+        self.bottomleft:query_boundingboxes_by_rectangle(rectrange, found,min,max)
+        self.topleft:query_boundingboxes_by_rectangle(rectrange, found,min,max)
+    end
+    return found
+end
+
+function QuadTree:query_boundingboxes_by_point(point, radius, found,min,max)
+    found = found or {}
+    if not self:inner_point_contains(point, radius) then
+        return found
+    end
+    for i, boundingbox in ipairs(self.boundingboxes) do
+        table.insert(found, boundingbox)
+    end
+    if self.isdivided then
+        self.topright:query_boundingboxes_by_point(point, radius, found,min,max)
+        self.bottomright:query_boundingboxes_by_point(point, radius, found,min,max)
+        self.bottomleft:query_boundingboxes_by_point(point, radius, found,min,max)
+        self.topleft:query_boundingboxes_by_point(point, radius, found,min,max)
     end
     return found
 end

@@ -111,40 +111,20 @@ function QuadTree:query_points_by_rectangle(rectrange, found)
     return found
 end
 
-function QuadTree:query_points_by_circle(circle, found)
-    local circle_center, radius = circle.center, circle.radius
-    found = found or {}
-    if not self:inner_point_contains(circle_center, radius) then
-        return found
-    end
-    for i, point in ipairs(self.points) do
-        --if (point.x - circle_center.x)^2 + (point.y - circle_center.y)^2 <= radius^2 then
-        if #(vector2(point.x, point.y) - vector2(circle_center.x, circle_center.y)) <= radius then
-            table.insert(found, point)
-        end
-    end
-    if self.isdivided then
-        self.topright:query_points_by_circle(circle, found)
-        self.bottomright:query_points_by_circle(circle, found)
-        self.bottomleft:query_points_by_circle(circle, found)
-        self.topleft:query_points_by_circle(circle, found)
-    end
-    return found
-end
 
-function QuadTree:query_points_by_point(point, found)
+function QuadTree:query_points_by_point(point, radius, found)
     found = found or {}
-    if not self:inner_point_contains(point) then
+    if not self:inner_point_contains(point, radius) then
         return found
     end
     for i, point in ipairs(self.points) do
         table.insert(found, point)
     end
     if self.isdivided then
-        self.topright:query_points_by_point(point, found)
-        self.bottomright:query_points_by_point(point, found)
-        self.bottomleft:query_points_by_point(point, found)
-        self.topleft:query_points_by_point(point, found)
+        self.topright:query_points_by_point(point, radius, found)
+        self.bottomright:query_points_by_point(point, radius, found)
+        self.bottomleft:query_points_by_point(point, radius, found)
+        self.topleft:query_points_by_point(point, radius, found)
     end
     return found
 end
@@ -200,40 +180,19 @@ function QuadTree:query_boxes_by_rectangle(rectrange, found)
     return found
 end
 
-function QuadTree:query_boxes_by_circle(circle, found)
-    local circle_center, radius = circle.center, circle.radius
+function QuadTree:query_boxes_by_point(point, radius, found)
     found = found or {}
-    if not self:inner_point_contains(circle_center, radius) then
-        return found
-    end
-    for i, box in ipairs(self.boxes) do
-        --if (box.center.x - circle_center.x)^2 + (box.center.y - circle_center.y)^2 <= radius^2 then
-        if #(vector2(box.center.x, box.center.y) - vector2(circle_center.x, circle_center.y)) <= radius then
-            table.insert(found, box)
-        end
-    end
-    if self.isdivided then
-        self.topright:query_boxes_by_circle(circle, found)
-        self.bottomright:query_boxes_by_circle(circle, found)
-        self.bottomleft:query_boxes_by_circle(circle, found)
-        self.topleft:query_boxes_by_circle(circle, found)
-    end
-    return found
-end
-
-function QuadTree:query_boxes_by_point(point, found)
-    found = found or {}
-    if not self:inner_point_contains(point) then
+    if not self:inner_point_contains(point, radius) then
         return found
     end
     for i, box in ipairs(self.boxes) do
         table.insert(found, box)
     end
     if self.isdivided then
-        self.topright:query_boxes_by_point(point, found)
-        self.bottomright:query_boxes_by_point(point, found)
-        self.bottomleft:query_boxes_by_point(point, found)
-        self.topleft:query_boxes_by_point(point, found)
+        self.topright:query_boxes_by_point(point, radius, found)
+        self.bottomright:query_boxes_by_point(point, radius, found)
+        self.bottomleft:query_boxes_by_point(point, radius, found)
+        self.topleft:query_boxes_by_point(point, radius, found)
     end
     return found
 end
@@ -283,40 +242,19 @@ function QuadTree:query_circles_by_rectangle(rectrange, found)
     return found
 end
 
-function QuadTree:query_circles_by_circle(circle, found)
-    local circle_center, radius = circle.center, circle.radius
+function QuadTree:query_circles_by_point(point, radius, found)
     found = found or {}
-    if not self:inner_circle_contains(circle) then
-        return found
-    end
-    for i, circle in ipairs(self.circles) do
-        --if (circle.center.x - circle_center.x)^2 + (circle.center.y - circle_center.y)^2 <= radius^2 then
-        if #(vector2(circle.center.x, circle.center.y) - vector2(circle_center.x, circle_center.y)) <= radius then
-            table.insert(found, circle)
-        end
-    end
-    if self.isdivided then
-        self.topright:query_circles_by_circle(circle, found)
-        self.bottomright:query_circles_by_circle(circle, found)
-        self.bottomleft:query_circles_by_circle(circle, found)
-        self.topleft:query_circles_by_circle(circle, found)
-    end
-    return found
-end
-
-function QuadTree:query_circles_by_point(point, found)
-    found = found or {}
-    if not self:inner_point_contains(point) then
+    if not self:inner_point_contains(point, radius) then
         return found
     end
     for i, circle in ipairs(self.circles) do
         table.insert(found, circle)
     end
     if self.isdivided then
-        self.topright:query_circles_by_point(point, found)
-        self.bottomright:query_circles_by_point(point, found)
-        self.bottomleft:query_circles_by_point(point, found)
-        self.topleft:query_circles_by_point(point, found)
+        self.topright:query_circles_by_point(point, radius, found)
+        self.bottomright:query_circles_by_point(point, radius, found)
+        self.bottomleft:query_circles_by_point(point, radius, found)
+        self.topleft:query_circles_by_point(point, radius, found)
     end
     return found
 end

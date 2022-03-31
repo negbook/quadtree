@@ -51,10 +51,7 @@ print("point by rectangle",#tree:query_points_by_rectangle({
 
 print("point by point",#tree:query_points_by_point(vector3(1.0,1.0,30.0)))
 
-print("point by circle",#tree:query_points_by_circle({
-    center = vector3(222.0,4000.0,30.0),
-    radius = 1000
-}))
+print("point by circle",#tree:query_points_by_point(vector3(1.0,1.0,30.0),100000))
 
 print("boxes by rectangle",#tree:query_boxes_by_rectangle({
     center = vector3(222.0,4000.0,30.0),
@@ -67,10 +64,7 @@ for i,v in pairs(boxes) do
     --print(v.somedata)
 end 
 
-print("boxes by circle",#tree:query_boxes_by_circle({
-    center = vector3(222.0,4000.0,30.0),
-    radius = 1000
-}))
+print("boxes by circle",#tree:query_boxes_by_point(vector3(1.0,1.0,30.0),100000))
 
 
 print("circles by rectangle",#tree:query_circles_by_rectangle({
@@ -80,7 +74,4 @@ print("circles by rectangle",#tree:query_circles_by_rectangle({
 
 print("circles by point",#tree:query_circles_by_point(vector3(1.0,1.0,30.0)))
 
-print("circles by circle",#tree:query_circles_by_circle({
-    center = vector3(4000.0,4000.0,30.0),
-    radius = 555
-}))
+print("circles by circle",#tree:query_circles_by_point(vector3(1.0,1.0,30.0),100000))

@@ -94,6 +94,31 @@ function QuadTree:insert_point(point)
     end
 end
 
+function QuadTree:remove_point (point)
+    if not self:inner_point_contains(point) then
+        return false
+    end
+    if #self.points > 0 then
+        for i, v in ipairs(self.points) do
+            if v == point then
+                table.remove(self.points, i)
+                return true
+            end
+        end
+    end
+    if self.isdivided then
+        if self.topright:remove_point(point) then
+            return true
+        elseif self.bottomright:remove_point(point) then
+            return true
+        elseif self.bottomleft:remove_point(point) then
+            return true
+        elseif self.topleft:remove_point(point) then
+            return true
+        end
+    end
+end
+
 function QuadTree:query_points_by_rectangle(rectrange, found)
     found = found or {}
     if not self:inner_intersects(rectrange) then
@@ -164,6 +189,32 @@ function QuadTree:insert_box(box)
     end
 end
 
+function QuadTree:remove_box(box)
+    if not self:inner_box_contains(box) then
+        return false
+    end
+    if #self.boxes > 0 then
+        for i, v in ipairs(self.boxes) do
+            if v == box then
+                table.remove(self.boxes, i)
+                return true
+            end
+        end
+    end
+    if self.isdivided then
+        if self.topright:remove_box(box) then
+            return true
+        elseif self.bottomright:remove_box(box) then
+            return true
+        elseif self.bottomleft:remove_box(box) then
+            return true
+        elseif self.topleft:remove_box(box) then
+            return true
+        end
+    end
+end
+
+
 function QuadTree:query_boxes_by_rectangle(rectrange, found)
     found = found or {}
     if not self:inner_intersects(rectrange) then
@@ -220,6 +271,31 @@ function QuadTree:insert_circle(circle)
         elseif self.bottomleft:insert_circle(circle) then
             return true
         elseif self.topleft:insert_circle(circle) then
+            return true
+        end
+    end
+end
+
+function QuadTree:remove_circle(circle)
+    if not self:inner_circle_contains(circle) then
+        return false
+    end
+    if #self.circles > 0 then
+        for i, v in ipairs(self.circles) do
+            if v == circle then
+                table.remove(self.circles, i)
+                return true
+            end
+        end
+    end
+    if self.isdivided then
+        if self.topright:remove_circle(circle) then
+            return true
+        elseif self.bottomright:remove_circle(circle) then
+            return true
+        elseif self.bottomleft:remove_circle(circle) then
+            return true
+        elseif self.topleft:remove_circle(circle) then
             return true
         end
     end
@@ -285,6 +361,32 @@ function QuadTree:insert_boundingbox(boundingbox)
         elseif self.bottomleft:insert_boundingbox(boundingbox) then
             return true
         elseif self.topleft:insert_boundingbox(boundingbox) then
+            return true
+        end
+    end
+end
+
+function QuadTree:remove_boundingbox(boundingbox)
+    local min,max = boundingbox.min,boundingbox.max
+    if not self:inner_boundingbox_contains(min,max) then
+        return false
+    end
+    if #self.boundingboxes > 0 then
+        for i, v in ipairs(self.boundingboxes) do
+            if v == boundingbox then
+                table.remove(self.boundingboxes, i)
+                return true
+            end
+        end
+    end
+    if self.isdivided then
+        if self.topright:remove_boundingbox(boundingbox) then
+            return true
+        elseif self.bottomright:remove_boundingbox(boundingbox) then
+            return true
+        elseif self.bottomleft:remove_boundingbox(boundingbox) then
+            return true
+        elseif self.topleft:remove_boundingbox(boundingbox) then
             return true
         end
     end

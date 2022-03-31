@@ -146,12 +146,12 @@ function QuadTree:query_points_by_point(point, found)
     return found
 end
 
+local GetMinMax = function(b)
+   local min = vector2(b.center.x - b.size.x/2, b.center.y - b.size.y/2)
+   local max = vector2(b.center.x + b.size.x/2, b.center.y + b.size.y/2)
+   return min, max
+end
 function QuadTree:inner_box_contains(box)
-    local GetMinMax = function(b)
-        local min = vector2(b.center.x - b.size.x/2, b.center.y - b.size.y/2)
-        local max = vector2(b.center.x + b.size.x/2, b.center.y + b.size.y/2)
-        return min, max
-    end
     local min1, max1 = GetMinMax(self)
     local min2, max2 = GetMinMax(box)
     return min1.x <= min2.x and max1.x >= max2.x and min1.y <= min2.y and max1.y >= max2.y

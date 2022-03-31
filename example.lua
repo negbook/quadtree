@@ -27,11 +27,14 @@ for i=1,1000 do
     local y = math.random(0,8000)
     local z = math.random(0,8000)
     tree:insert_polygon({
+        vertices = {
         vector3(x,y,z),
         vector3(x+100,y,z),
         vector3(x+100,y+100,z),
         vector3(x,y+100,z)
-    })
+    },
+    somedata = "asd"..i
+})
 end
 
 print(tree)
@@ -72,3 +75,7 @@ print("polygons by rectangle",#tree:query_polygons_by_rectangle({
 print("polygons by point",#tree:query_polygons_by_point(vector3(4441.0,4441.0,30.0)))
 
 print("polygons by circle",#tree:query_polygons_by_circle(vector3(4000.0,4000.0,30.0), 500))
+local polygons = tree:query_polygons_by_circle(vector3(4000.0,4000.0,30.0), 500)
+for i,v in pairs(polygons) do 
+    print(v.somedata)
+end 

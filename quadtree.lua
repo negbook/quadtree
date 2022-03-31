@@ -235,7 +235,8 @@ function QuadTree:query_boxes_by_point(point, found)
     return found
 end
 
-function QuadTree:inner_polygon_contains(vertices)
+function QuadTree:inner_polygon_contains(polygon)
+    local vertices = polygon.vertices
     local minx, maxx = math.huge, -math.huge
     local miny, maxy = math.huge, -math.huge
     for i, vertex in ipairs(vertices) do
@@ -248,24 +249,25 @@ function QuadTree:inner_polygon_contains(vertices)
 end
 
 
-function QuadTree:insert_polygon(vertices)
-    if not self:inner_polygon_contains(vertices) then
+function QuadTree:insert_polygon(polygon)
+    local vertices = polygon.vertices
+    if not self:inner_polygon_contains(polygon) then
         return false
     end
     if #self.polygons < self.capacity then
-        table.insert(self.polygons, vertices)
+        table.insert(self.polygons, polygon)
         return true
     else 
         if not self.isdivided then
             self:inner_subdivide()
         end
-        if self.topright:insert_polygon(vertices) then
+        if self.topright:insert_polygon(polygon) then
             return true
-        elseif self.bottomright:insert_polygon(vertices) then
+        elseif self.bottomright:insert_polygon(polygon) then
             return true
-        elseif self.bottomleft:insert_polygon(vertices) then
+        elseif self.bottomleft:insert_polygon(polygon) then
             return true
-        elseif self.topleft:insert_polygon(vertices) then
+        elseif self.topleft:insert_polygon(polygon) then
             return true
         end
     end
@@ -276,8 +278,8 @@ function QuadTree:query_polygons_by_rectangle(rectrange, found)
     if not self:inner_intersects(rectrange) then
         return found
     end
-    for i, vertices in ipairs(self.polygons) do
-        table.insert(found, vertices)
+    for i, polygon in ipairs(self.polygons) do
+        table.insert(found, polygon)
     end
     if self.isdivided then
         self.topright:query_polygons_by_rectangle(rectrange, found)
@@ -293,10 +295,11 @@ function QuadTree:query_polygons_by_circle(circle_center, radius, found)
     if not self:inner_point_contains(circle_center, radius) then
         return found
     end
-    for i, vertices in ipairs(self.polygons) do
+    for i, polygon in ipairs(self.polygons) do
         --if (vertices[1].x - circle_center.x)^2 + (vertices[1].y - circle_center.y)^2 <= radius^2 then
+        local vertices = polygon.vertices
         if #(vector2(vertices[1].x, vertices[1].y) - vector2(circle_center.x, circle_center.y)) <= radius then
-            table.insert(found, vertices)
+            table.insert(found, polygon)
         end
     end
     if self.isdivided then
@@ -313,8 +316,8 @@ function QuadTree:query_polygons_by_point(point, found)
     if not self:inner_point_contains(point) then
         return found
     end
-    for i, vertices in ipairs(self.polygons) do
-        table.insert(found, vertices)
+    for i, polygon in ipairs(self.polygons) do
+        table.insert(found, polygon)
     end
     if self.isdivided then
         self.topright:query_polygons_by_point(point, found)
@@ -340,8 +343,8 @@ function QuadTree:query_points_boxes_polygons_by_rectangle(rectrange, found)
     for i, box in ipairs(self.boxes) do
         table.insert(found.boxes, box)
     end
-    for i, vertices in ipairs(self.polygons) do
-        table.insert(found.polygons, vertices)
+    for i, polygon in ipairs(self.polygons) do
+        table.insert(found.polygons, polygon)
     end
     if self.isdivided then
         self.topright:query_points_boxes_polygons_by_rectangle(rectrange, found)
@@ -370,10 +373,11 @@ function QuadTree:query_points_boxes_polygons_by_circle(circle_center, radius, f
     for i, box in ipairs(self.boxes) do
         table.insert(found.boxes, box)
     end
-    for i, vertices in ipairs(self.polygons) do
+    for i, polygon in ipairs(self.polygons) do
         --if (vertices[1].x - circle_center.x)^2 + (vertices[1].y - circle_center.y)^2 <= radius^2 then
+        local vertices = polygon.vertices
         if #(vector2(vertices[1].x, vertices[1].y) - vector2(circle_center.x, circle_center.y)) <= radius then
-            table.insert(found.polygons, vertices)
+            table.insert(found.polygons, polygon)
         end
     end
     if self.isdivided then
@@ -400,8 +404,8 @@ function QuadTree:query_points_boxes_polygons_by_point(point, found)
     for i, box in ipairs(self.boxes) do
         table.insert(found.boxes, box)
     end
-    for i, vertices in ipairs(self.polygons) do
-        table.insert(found.polygons, vertices)
+    for i, polygon in ipairs(self.polygons) do
+        table.insert(found.polygons, polygon)
     end
     if self.isdivided then
         self.topright:query_points_boxes_polygons_by_point(point, found)

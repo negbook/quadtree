@@ -17,7 +17,8 @@ for i=1,1000 do
     local z = math.random(0,8000)
     tree:insert_box({
         center = vector3(x,y,z),
-        size = vector3(100,100,100)
+        size = vector3(100,100,100),
+        somedata = "test"..i
     })
 end
 
@@ -58,6 +59,10 @@ print("boxes by rectangle",#tree:query_boxes_by_rectangle({
 }))
 
 print("boxes by point",#tree:query_boxes_by_point(vector3(1.0,1.0,30.0)))
+local boxes = tree:query_boxes_by_point(vector3(1.0,1.0,30.0))
+for i,v in pairs(boxes) do 
+    print(v.somedata)
+end 
 
 print("polygons by rectangle",#tree:query_polygons_by_rectangle({
     center = vector3(222.0,4000.0,30.0),

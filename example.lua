@@ -37,6 +37,17 @@ for i=1,1000 do
 })
 end
 
+for i=1,1000 do 
+    local x = math.random(0,8000)
+    local y = math.random(0,8000)
+    local z = math.random(0,8000)
+    tree:insert_circle({
+        center = vector3(x,y,z),
+        radius = 100,
+        somedata = "asd"..i
+    })
+end
+
 print(tree)
 print(tree.topleft)
 print(tree.topright)
@@ -79,3 +90,12 @@ local polygons = tree:query_polygons_by_circle(vector3(4000.0,4000.0,30.0), 500)
 for i,v in pairs(polygons) do 
     print(v.somedata)
 end 
+
+print("circle by rectangle",#tree:query_circles_by_rectangle({
+    center = vector3(222.0,4000.0,30.0),
+    size = vector3(400.0,400.0,400.0)
+}))
+
+print("circle by point",#tree:query_circles_by_point(vector3(4441.0,4441.0,30.0)))
+
+print("circle by circle",#tree:query_circles_by_circle(vector3(4000.0,4000.0,30.0), 500))

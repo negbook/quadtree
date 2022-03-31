@@ -116,7 +116,8 @@ function QuadTree:query_points_by_circle(circle_center, radius, found)
         return found
     end
     for i, point in ipairs(self.points) do
-        if (point.x - circle_center.x)^2 + (point.y - circle_center.y)^2 <= radius^2 then
+        --if (point.x - circle_center.x)^2 + (point.y - circle_center.y)^2 <= radius^2 then
+        if #(vector2(point.x, point.y) - vector2(circle_center.x, circle_center.y)) <= radius then
             table.insert(found, point)
         end
     end
@@ -203,7 +204,8 @@ function QuadTree:query_boxes_by_circle(circle_center, radius, found)
         return found
     end
     for i, box in ipairs(self.boxes) do
-        if (box.center.x - circle_center.x)^2 + (box.center.y - circle_center.y)^2 <= radius^2 then
+        --if (box.center.x - circle_center.x)^2 + (box.center.y - circle_center.y)^2 <= radius^2 then
+        if #(vector2(box.center.x, box.center.y) - vector2(circle_center.x, circle_center.y)) <= radius then
             table.insert(found, box)
         end
     end
@@ -292,7 +294,8 @@ function QuadTree:query_polygons_by_circle(circle_center, radius, found)
         return found
     end
     for i, vertices in ipairs(self.polygons) do
-        if (vertices[1].x - circle_center.x)^2 + (vertices[1].y - circle_center.y)^2 <= radius^2 then
+        --if (vertices[1].x - circle_center.x)^2 + (vertices[1].y - circle_center.y)^2 <= radius^2 then
+        if #(vector2(vertices[1].x, vertices[1].y) - vector2(circle_center.x, circle_center.y)) <= radius then
             table.insert(found, vertices)
         end
     end
@@ -359,7 +362,8 @@ function QuadTree:query_points_boxes_polygons_by_circle(circle_center, radius, f
         return found
     end
     for i, point in ipairs(self.points) do
-        if (point.x - circle_center.x)^2 + (point.y - circle_center.y)^2 <= radius^2 then
+        --if (point.x - circle_center.x)^2 + (point.y - circle_center.y)^2 <= radius^2 then
+        if #(vector2(point.x, point.y) - vector2(circle_center.x, circle_center.y)) <= radius then
             table.insert(found.points, point)
         end
     end
@@ -367,7 +371,8 @@ function QuadTree:query_points_boxes_polygons_by_circle(circle_center, radius, f
         table.insert(found.boxes, box)
     end
     for i, vertices in ipairs(self.polygons) do
-        if (vertices[1].x - circle_center.x)^2 + (vertices[1].y - circle_center.y)^2 <= radius^2 then
+        --if (vertices[1].x - circle_center.x)^2 + (vertices[1].y - circle_center.y)^2 <= radius^2 then
+        if #(vector2(vertices[1].x, vertices[1].y) - vector2(circle_center.x, circle_center.y)) <= radius then
             table.insert(found.polygons, vertices)
         end
     end

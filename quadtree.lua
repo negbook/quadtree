@@ -306,7 +306,20 @@ function QuadTree:query_polygons_by_circle(circle_center, radius, found)
 end
 
 function QuadTree:query_polygons_by_point(point, found)
-    return self:query_polygons_by_circle(point, 0, found)
+    found = found or {}
+    if not self:inner_point_contains(point) then
+        return found
+    end
+    for i, vertices in ipairs(self.polygons) do
+        table.insert(found, vertices)
+    end
+    if self.isdivided then
+        self.topright:query_polygons_by_point(point, found)
+        self.bottomright:query_polygons_by_point(point, found)
+        self.bottomleft:query_polygons_by_point(point, found)
+        self.topleft:query_polygons_by_point(point, found)
+    end
+    return found
 end
 
 function QuadTree:query_points_boxes_polygons_by_rectangle(rectrange, found)

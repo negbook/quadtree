@@ -1,4 +1,3 @@
-
 local tree = QuadTree.new({
     center = vector3(4000.0,4000.0,30.0),
     size = vector3(8000.0,8000.0,8000.0)

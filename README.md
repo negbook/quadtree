@@ -106,3 +106,41 @@ for i,v in pairs(boundingboxes) do
     end 
 end 
 ```
+
+Other Example relative Zones query
+```
+local mapMinX, mapMinY, mapMaxX, mapMaxY = -3700, -4400, 4500, 8000  --found from polyzone resource
+local mapCenter = vector3(mapMinX + (mapMaxX - mapMinX) / 2, mapMinY + (mapMaxY - mapMinY) / 2, 0)
+local mapSize = vector3(mapMaxX - mapMinX, mapMaxY - mapMinY, 0)
+local zonetree =  QuadTree.new({
+    center = mapCenter,
+    size = mapSize
+}, 4)
+
+
+InsertMinMaxIntoZoneTree = function(zone)
+    local minpos,maxpos = zone.get_min_max_active()
+    zonetree:insert_boundingbox({
+        min = minpos,
+        max = maxpos,
+        zone = zone
+    })
+end
+
+GetNearZonesQuery = function(point)
+    return zonetree:query_boundingboxes_by_point(point)
+end 
+
+IsPointInZonesQuery = function(point,zone)
+    local found = false 
+    local nearzones = GetNearZonesQuery(point)
+    for i,nearzone in pairs(nearzones) do
+        if nearzone.zone == zone then 
+            found = true 
+        end 
+    end
+    return found
+end
+
+
+```

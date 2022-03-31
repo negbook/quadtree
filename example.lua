@@ -1,4 +1,3 @@
-
 local tree = QuadTree.new({
     center = vector3(4000.0,4000.0,30.0),
     size = vector3(8000.0,8000.0,8000.0)
@@ -26,15 +25,11 @@ for i=1,1000 do
     local x = math.random(0,8000)
     local y = math.random(0,8000)
     local z = math.random(0,8000)
-    tree:insert_polygon({
-        vertices = {
-        vector3(x,y,z),
-        vector3(x+100,y,z),
-        vector3(x+100,y+100,z),
-        vector3(x,y+100,z)
-    },
-    somedata = "asd"..i
-})
+    tree:insert_circle({
+        center = vector3(x,y,z),
+        radius = 1000,
+        somedata = "asd"..i
+    })
 end
 
 print(tree)
@@ -56,6 +51,11 @@ print("point by rectangle",#tree:query_points_by_rectangle({
 
 print("point by point",#tree:query_points_by_point(vector3(1.0,1.0,30.0)))
 
+print("point by circle",#tree:query_points_by_circle({
+    center = vector3(222.0,4000.0,30.0),
+    radius = 1000
+}))
+
 print("boxes by rectangle",#tree:query_boxes_by_rectangle({
     center = vector3(222.0,4000.0,30.0),
     size = vector3(400.0,400.0,400.0)
@@ -64,18 +64,23 @@ print("boxes by rectangle",#tree:query_boxes_by_rectangle({
 print("boxes by point",#tree:query_boxes_by_point(vector3(1.0,1.0,30.0)))
 local boxes = tree:query_boxes_by_point(vector3(1.0,1.0,30.0))
 for i,v in pairs(boxes) do 
-    print(v.somedata)
+    --print(v.somedata)
 end 
 
-print("polygons by rectangle",#tree:query_polygons_by_rectangle({
+print("boxes by circle",#tree:query_boxes_by_circle({
+    center = vector3(222.0,4000.0,30.0),
+    radius = 1000
+}))
+
+
+print("circles by rectangle",#tree:query_circles_by_rectangle({
     center = vector3(222.0,4000.0,30.0),
     size = vector3(400.0,400.0,400.0)
 }))
 
-print("polygons by point",#tree:query_polygons_by_point(vector3(4441.0,4441.0,30.0)))
+print("circles by point",#tree:query_circles_by_point(vector3(1.0,1.0,30.0)))
 
-print("polygons by circle",#tree:query_polygons_by_circle(vector3(4000.0,4000.0,30.0), 500))
-local polygons = tree:query_polygons_by_circle(vector3(4000.0,4000.0,30.0), 500)
-for i,v in pairs(polygons) do 
-    print(v.somedata)
-end 
+print("circles by circle",#tree:query_circles_by_circle({
+    center = vector3(4000.0,4000.0,30.0),
+    radius = 555
+}))

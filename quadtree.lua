@@ -134,14 +134,15 @@ local GetMinMax = function(b)
    local max = vector2(b.center.x + b.size.x/2, b.center.y + b.size.y/2)
    return min, max
 end
-function QuadTree:inner_box_contains(box)
+function QuadTree:inner_box_contains(box,min,max)
     local min1, max1 = GetMinMax(self)
     local min2, max2 = GetMinMax(box)
+    if min and max then min2 , max2 = min, max end
     return min1.x <= min2.x and max1.x >= max2.x and min1.y <= min2.y and max1.y >= max2.y
 end
 
-function QuadTree:insert_box(box)
-    if not self:inner_box_contains(box) then
+function QuadTree:insert_box(box,min,max)
+    if not self:inner_box_contains(box,min,max) then
         return false
     end
     if #self.boxes < self.capacity then

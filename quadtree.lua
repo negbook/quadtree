@@ -20,7 +20,8 @@ function QuadTree.new(boundary, capacity)
         boxes = {},
         boundingboxes = {},
         custom_objects = {},
-        isdivided = false
+        isdivided = false,
+        isinquery = false,
     }, {
         __index = QuadTree,
         __tostring = function(self)
@@ -451,6 +452,9 @@ function QuadTree:inner_AutoMinMax(b)
         error("invalid boundingbox of custom object",2)
     end
 end
+function QuadTree:GetCenter(min,max)
+    return vector2((min.x + max.x)/2, (min.y + max.y)/2)
+end
 
 --not tested below
 function QuadTree:insert_custom(catagary_name,custom_object)
@@ -611,4 +615,68 @@ function QuadTree:clear_all()
         self.bottomleft:clear_all()
         self.topleft:clear_all()
     end
+end
+
+
+
+
+function QuadTree:DrawGrids(freezeZ)
+    local r,g,b,a = 255,255,255,255
+    if self.isinquery then
+        r,g,b,a = 0,255,0,255
+    end
+    local drawz = freezeZ or (GetEntityCoords(GetPlayerPed(-1)).z + 1.0)
+        DrawLine(self.center.x-self.size.x/2,self.center.y-self.size.y/2,drawz,self.center.x+self.size.x/2,self.center.y-self.size.y/2,drawz,r,g,b,a)
+        DrawLine(self.center.x+self.size.x/2,self.center.y-self.size.y/2,drawz,self.center.x+self.size.x/2,self.center.y+self.size.y/2,drawz,r,g,b,a)
+
+        DrawLine(self.center.x+self.size.x/2,self.center.y+self.size.y/2,drawz,self.center.x-self.size.x/2,self.center.y+self.size.y/2,drawz,r,g,b,a)
+        DrawLine(self.center.x-self.size.x/2,self.center.y+self.size.y/2,drawz,self.center.x-self.size.x/2,self.center.y-self.size.y/2,drawz,r,g,b,a)
+
+        DrawLine(self.center.x-self.size.x/2,self.center.y,drawz,self.center.x+self.size.x/2,self.center.y,drawz,r,g,b,a)
+        DrawLine(self.center.x,self.center.y-self.size.y/2,drawz,self.center.x,self.center.y+self.size.y/2,drawz,r,g,b,a)
+        
+        if self.points[1] then
+            for i, point in ipairs(self.points) do
+                DrawLine(point.x,point.y,drawz,point.x,point.y,drawz+2^10,r,g,255,a)
+            end
+        end
+        if self.circles[1] then
+            for i, circle in ipairs(self.circles) do
+                DrawLine(circle.center.x,circle.center.y,drawz,circle.center.x,circle.center.y,drawz+2^10,r,g,255,a)
+            end
+        end
+        if self.boxes[1] then
+            for i, box in ipairs(self.boxes) do
+                DrawLine(box.center.x,box.center.y,drawz,box.center.x,box.center.y,drawz+2^10,r,g,255,a)
+            end
+        end
+        if self.boundingboxes[1] then
+            for i, boundingbox in ipairs(self.boundingboxes) do
+                DrawLine(boundingbox.center.x,boundingbox.center.y,drawz,boundingbox.center.x,boundingbox.center.y,drawz+2^10,r,g,255,a)
+            end
+        end
+        for i,v in pairs(self.custom_objects) do 
+            if v[1] then
+                for i, obj in ipairs(v) do
+                    local min,max = self:inner_AutoMinMax(obj)
+                    local center = self:GetCenter(min,max)
+                    DrawLine(center.x,center.y,drawz,center.x,center.y,drawz+2^10,255,0,255,255)
+                end
+            end
+        end
+    if self.isdivided then
+        self.topright:DrawGrids(freezeZ)
+        self.bottomright:DrawGrids(freezeZ)
+        self.bottomleft:DrawGrids(freezeZ)
+        self.topleft:DrawGrids(freezeZ)
+    end
+end
+
+function QuadTree:Debug(freezeZ)
+    CreateThread(function()
+        while true do
+            self:DrawGrids(freezeZ)
+            Wait(0)
+        end
+    end)
 end

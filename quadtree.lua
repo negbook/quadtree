@@ -1,5 +1,5 @@
 QuadTree = {}
-Contains = {
+local Contains = {
     pointtopoint = function(pointA,pointB,radius)
         local radius = radius or 0
         return #(vector2(pointA.x,pointA.y) - vector2(pointB.x,pointB.y)) <= radius
@@ -134,6 +134,11 @@ function QuadTree:remove_point (point)
     end
 end
 
+function QuadTree:update_point(point)
+    self:remove_point(point)
+    self:insert_point(point)
+end
+
 function QuadTree:query_points_by_rectangle(rectrange, found)
     found = found or {}
     if not self:inner_intersects(rectrange) then
@@ -230,6 +235,11 @@ function QuadTree:remove_object(catagary_name,object)
             return true
         end
     end
+end
+
+function QuadTree:update_object(catagary_name,object)
+    self:remove_object(catagary_name,object)
+    self:insert_object(catagary_name,object)
 end
 
 function QuadTree:query_objects_by_rectangle(catagary_name,rectrange, found)

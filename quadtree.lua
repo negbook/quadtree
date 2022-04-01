@@ -6,8 +6,7 @@ local Contains = {
     end,
     pointtorectangle = function(pointA,rectangle,radius)
         local radius = radius or 0
-        local distance = #(vector2(pointA.x,pointA.y) - vector2(rectangle.center.x,rectangle.center.y))
-        return distance <= radius and distance <= rectangle.size.x/2 and distance <= rectangle.size.y/2
+        return pointA.x >= rectangle.center.x - rectangle.size.x/2 - radius and pointA.x <= rectangle.center.x + rectangle.size.x/2 + radius and pointA.y >= rectangle.center.y - rectangle.size.y/2 - radius and pointA.y <= rectangle.center.y + rectangle.size.y/2 + radius
     end,
     rectangletorectangle = function(rectangleA,rectangleB,radius)
         local radius = radius or 0
@@ -83,7 +82,7 @@ end
 
 function QuadTree:inner_point_contains (point, radius)
     local radius = radius or 0.0
-    return point.x >= self.center.x - self.size.x/2 - radius and point.x <= self.center.x + self.size.x/2 + radius and point.y >= self.center.y - self.size.y/2 - radius and point.y <= self.center.y + self.size.y/2 + radius
+    return point.x + radius >= self.center.x - self.size.x/2 and point.x - radius <= self.center.x + self.size.x/2 and point.y + radius >= self.center.y - self.size.y/2 and point.y - radius <= self.center.y + self.size.y/2
 end
 
 function QuadTree:insert_point(point)
@@ -265,7 +264,7 @@ function QuadTree:query_objects_by_rectangle(catagary_name,rectrange, found)
     return found
 end
 
-function QuadTree:query_objects_by_point(catagary_name,point, radius, found)
+function QuadTree:query_objects_by_point(catagary_name, point, radius, found)
     found = found or {}
     if not self:inner_point_contains(point, radius) then
         return found
@@ -288,6 +287,7 @@ function QuadTree:query_objects_by_point(catagary_name,point, radius, found)
     return found
 end
 
+
 function QuadTree:clear_points()
     self.points = {}
     if self.isdivided then
@@ -298,7 +298,7 @@ function QuadTree:clear_points()
     end
 end
 
-function QuadTree:clear_object(catagary_name)
+function QuadTree:clear_objects(catagary_name)
     self.objects[catagary_name] = {}
     if self.isdivided then
         self.topright:clear_object(catagary_name)

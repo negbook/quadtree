@@ -1,4 +1,55 @@
 QuadTree = {}
+Contains = {
+    pointtopoint = function(pointA,pointB,radius)
+        local radius = radius or 0
+        return #(vector2(pointA.x,pointA.y) - vector2(pointB.x,pointB.y)) <= radius
+    end,
+    pointtorectangle = function(pointA,rectangle,radius)
+        local radius = radius or 0
+        local distance = #(vector2(pointA.x,pointA.y) - vector2(rectangle.center.x,rectangle.center.y))
+        return distance <= radius and distance <= rectangle.size.x/2 and distance <= rectangle.size.y/2
+    end,
+    pointtocircle = function(pointA,circle,radius)
+        local radius = radius or 0
+        local distance = #(vector2(pointA.x,pointA.y) - vector2(circle.center.x,circle.center.y))
+        return distance <= radius and distance <= circle.radius
+    end,
+    rectangletopoint = function(rectangleA,pointA,radius)
+        local radius = radius or 0
+        return pointA.x >= rectangleA.center.x - rectangleA.size.x/2 - radius and pointA.x <= rectangleA.center.x + rectangleA.size.x/2 + radius and pointA.y >= rectangleA.center.y - rectangleA.size.y/2 - radius and pointA.y <= rectangleA.center.y + rectangleA.size.y/2 + radius
+    end,
+    rectangletorectangle = function(rectangleA,rectangleB,radius)
+        local radius = radius or 0
+        return rectangleA.center.x - rectangleA.size.x/2 - radius <= rectangleB.center.x + rectangleB.size.x/2 + radius and rectangleA.center.x + rectangleA.size.x/2 + radius >= rectangleB.center.x - rectangleB.size.x/2 - radius and rectangleA.center.y - rectangleA.size.y/2 - radius <= rectangleB.center.y + rectangleB.size.y/2 + radius and rectangleA.center.y + rectangleA.size.y/2 + radius >= rectangleB.center.y - rectangleB.size.y/2 - radius
+    end,
+    rectangletocircle = function(rectangle,circle,radius)
+        local radius = radius or 0
+        return rectangle.center.x - rectangle.size.x/2 - radius <= circle.center.x + circle.radius and rectangle.center.x + rectangle.size.x/2 + radius >= circle.center.x - circle.radius and rectangle.center.y - rectangle.size.y/2 - radius <= circle.center.y + circle.radius and rectangle.center.y + rectangle.size.y/2 + radius >= circle.center.y - circle.radius
+    end,
+    circletopoint = function(circle,pointA,radius)
+        local radius = radius or 0
+        local distance = #(vector2(pointA.x,pointA.y) - vector2(circle.center.x,circle.center.y))
+        return distance <= radius and distance <= circle.radius
+    end,
+    circletorectangle = function(circle,rectangle,radius)
+        local radius = radius or 0
+        return circle.center.x - circle.radius <= rectangle.center.x + rectangle.size.x/2 + radius and circle.center.x + circle.radius >= rectangle.center.x - rectangle.size.x/2 - radius and circle.center.y - circle.radius <= rectangle.center.y + rectangle.size.y/2 + radius and circle.center.y + circle.radius >= rectangle.center.y - rectangle.size.y/2 - radius
+    end,
+    circletocircle = function(circleA,circleB,radius)
+        local radius = radius or 0
+        return #(vector2(circleA.center.x,circleA.center.y) - vector2(circleB.center.x,circleB.center.y)) <= circleA.radius + circleB.radius
+    end,
+    boundingboxtopoint = function(boundingbox,pointA,radius)
+        local radius = radius or 0
+        return pointA.x >= boundingbox.min.x - radius and pointA.x <= boundingbox.max.x + radius and pointA.y >= boundingbox.min.y - radius and pointA.y <= boundingbox.max.y + radius
+    end,
+    boundingboxtorectangle = function(boundingbox,rectangle,radius)
+        local radius = radius or 0
+        return boundingbox.min.x - radius <= rectangle.center.x + rectangle.size.x/2 + radius and boundingbox.max.x + radius >= rectangle.center.x - rectangle.size.x/2 - radius and boundingbox.min.y - radius <= rectangle.center.y + rectangle.size.y/2 + radius and boundingbox.max.y + radius >= rectangle.center.y - rectangle.size.y/2 - radius
+    end,
+}
+
+
 function QuadTree.new(boundary, capacity)
     local boundary_left = boundary.center.x - boundary.size.x/2
     local boundary_right = boundary.center.x + boundary.size.x/2
@@ -127,7 +178,9 @@ function QuadTree:query_points_by_rectangle(rectrange, found)
         return found
     end
     for i, point in ipairs(self.points) do
-        table.insert(found, point)
+        if Contains.pointtorectangle(point, rectrange) then
+            table.insert(found, point)
+        end
     end
     if self.isdivided then
         self.topright:query_points_by_rectangle(rectrange, found)
@@ -144,8 +197,10 @@ function QuadTree:query_points_by_point(point, radius, found)
     if not self:inner_point_contains(point, radius) then
         return found
     end
-    for i, point in ipairs(self.points) do
-        table.insert(found, point)
+    for i, point_ in ipairs(self.points) do
+        if Contains.pointtopoint(point_, point, radius) then
+            table.insert(found, point_)
+        end
     end
     if self.isdivided then
         self.topright:query_points_by_point(point, radius, found)
@@ -223,7 +278,9 @@ function QuadTree:query_boxes_by_rectangle(rectrange, found)
         return found
     end
     for i, box in ipairs(self.boxes) do
-        table.insert(found, box)
+        if Contains.rectangletorectangle(box, rectrange) then
+            table.insert(found, box)
+        end
     end
     if self.isdivided then
         self.topright:query_boxes_by_rectangle(rectrange, found)
@@ -240,7 +297,9 @@ function QuadTree:query_boxes_by_point(point, radius, found)
         return found
     end
     for i, box in ipairs(self.boxes) do
-        table.insert(found, box)
+        if Contains.rectangletopoint(box, point, radius) then
+            table.insert(found, box)
+        end
     end
     if self.isdivided then
         self.topright:query_boxes_by_point(point, radius, found)
@@ -310,7 +369,9 @@ function QuadTree:query_circles_by_rectangle(rectrange, found)
         return found
     end
     for i, circle in ipairs(self.circles) do
-        table.insert(found, circle)
+        if Contains.rectangletocircle(rectrange, circle) then
+            table.insert(found, circle)
+        end
     end
     if self.isdivided then
         self.topright:query_circles_by_rectangle(rectrange, found)
@@ -327,7 +388,9 @@ function QuadTree:query_circles_by_point(point, radius, found)
         return found
     end
     for i, circle in ipairs(self.circles) do
-        table.insert(found, circle)
+        if Contains.circletopoint(circle, point, radius) then
+            table.insert(found, circle)
+        end
     end
     if self.isdivided then
         self.topright:query_circles_by_point(point, radius, found)
@@ -400,7 +463,9 @@ function QuadTree:query_boundingboxes_by_rectangle(rectrange, found,min,max)
         return found
     end
     for i, boundingbox in ipairs(self.boundingboxes) do
-        table.insert(found, boundingbox)
+        if Contains.boundingboxtorectangle(boundingbox, rectrange) then
+            table.insert(found, boundingbox)
+        end
     end
     if self.isdivided then
         self.topright:query_boundingboxes_by_rectangle(rectrange, found,min,max)
@@ -417,7 +482,9 @@ function QuadTree:query_boundingboxes_by_point(point, radius, found,min,max)
         return found
     end
     for i, boundingbox in ipairs(self.boundingboxes) do
-        table.insert(found, boundingbox)
+        if Contains.boundingboxtopoint(boundingbox, point, radius) then
+            table.insert(found, boundingbox)
+        end
     end
     if self.isdivided then
         self.topright:query_boundingboxes_by_point(point, radius, found,min,max)
@@ -466,6 +533,7 @@ function QuadTree:insert_custom(catagary_name,custom_object)
         self.custom_objects[catagary_name] = {}
     end
     if #self.custom_objects[catagary_name] < self.capacity then
+        custom_object.min,custom_object.max = min,max
         table.insert(self.custom_objects[catagary_name], custom_object)
         return true
     else 
@@ -519,7 +587,9 @@ function QuadTree:query_custom_by_rectangle(catagary_name,rectrange, found,min,m
     end
     if self.custom_objects[catagary_name] then
         for i, custom_object in ipairs(self.custom_objects[catagary_name]) do
-            table.insert(found, custom_object)
+            if Contains.boundingboxtorectangle(custom_object, rectrange) then
+                table.insert(found, custom_object)
+            end
         end
     else 
         return found
@@ -540,7 +610,9 @@ function QuadTree:query_custom_by_point(catagary_name,point, radius, found,min,m
     end
     if self.custom_objects[catagary_name] then
         for i, custom_object in ipairs(self.custom_objects[catagary_name]) do
-            table.insert(found, custom_object)
+            if Contains.boundingboxtopoint(custom_object, point, radius) then
+                table.insert(found, custom_object)
+            end
         end
     else
         return found

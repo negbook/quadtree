@@ -19,6 +19,7 @@ function QuadTree.new(boundary, capacity)
         circles = {},
         boxes = {},
         boundingboxes = {},
+        custom_objects = {},
         isdivided = false
     }, {
         __index = QuadTree,
@@ -424,4 +425,190 @@ function QuadTree:query_boundingboxes_by_point(point, radius, found,min,max)
         self.topleft:query_boundingboxes_by_point(point, radius, found,min,max)
     end
     return found
+end
+
+
+function QuadTree:inner_AutoMinMax(b)
+    if b.center and b.size then 
+        local min = vector2(b.center.x - b.size.x/2, b.center.y - b.size.y/2)
+        local max = vector2(b.center.x + b.size.x/2, b.center.y + b.size.y/2)
+        return min, max
+    elseif b.min and b.max then
+        return b.min, b.max
+    elseif b.x and b.y and b.w and b.h then
+        local min = vector2(b.x, b.y)
+        local max = vector2(b.x + b.w, b.y + b.h)
+        return min, max
+    elseif b.x1 and b.y1 and b.x2 and b.y2 then
+        local min = vector2(b.x1, b.y1)
+        local max = vector2(b.x2, b.y2)
+        return min, max
+    elseif b.center and b.radius then
+        local min = vector2(b.center.x - b.radius, b.center.y - b.radius)
+        local max = vector2(b.center.x + b.radius, b.center.y + b.radius)
+        return min, max
+    else 
+        error("invalid boundingbox of custom object",2)
+    end
+end
+
+--not tested below
+function QuadTree:insert_custom(catagary_name,custom_object)
+    local min,max = self:inner_AutoMinMax(custom_object)
+    if not self:inner_boundingbox_contains(min,max) then
+        return false
+    end
+    if not self.custom_objects[catagary_name] then
+        self.custom_objects[catagary_name] = {}
+    end
+    if #self.custom_objects[catagary_name] < self.capacity then
+        table.insert(self.custom_objects[catagary_name], custom_object)
+        return true
+    else 
+        if not self.isdivided then
+            self:inner_subdivide()
+        end
+        if self.topright:insert_custom(catagary_name,custom_object) then
+            return true
+        elseif self.bottomright:insert_custom(catagary_name,custom_object) then
+            return true
+        elseif self.bottomleft:insert_custom(catagary_name,custom_object) then
+            return true
+        elseif self.topleft:insert_custom(catagary_name,custom_object) then
+            return true
+        end
+    end
+end
+
+function QuadTree:remove_custom(catagary_name,custom_object)
+    local min,max = self:inner_AutoMinMax(custom_object)
+    if not self:inner_boundingbox_contains(min,max) then
+        return false
+    end
+    if self.custom_objects[catagary_name] then
+        for i, v in ipairs(self.custom_objects[catagary_name]) do
+            if v == custom_object then
+                table.remove(self.custom_objects[catagary_name], i)
+                return true
+            end
+        end
+    else 
+        return false
+    end
+    if self.isdivided then
+        if self.topright:remove_custom(catagary_name,custom_object) then
+            return true
+        elseif self.bottomright:remove_custom(catagary_name,custom_object) then
+            return true
+        elseif self.bottomleft:remove_custom(catagary_name,custom_object) then
+            return true
+        elseif self.topleft:remove_custom(catagary_name,custom_object) then
+            return true
+        end
+    end
+end
+
+function QuadTree:query_custom_by_rectangle(catagary_name,rectrange, found,min,max)
+    found = found or {}
+    if not self:inner_intersects(rectrange) then
+        return found
+    end
+    if self.custom_objects[catagary_name] then
+        for i, custom_object in ipairs(self.custom_objects[catagary_name]) do
+            table.insert(found, custom_object)
+        end
+    else 
+        return found
+    end
+    if self.isdivided then
+        self.topright:query_custom_by_rectangle(catagary_name,rectrange, found,min,max)
+        self.bottomright:query_custom_by_rectangle(catagary_name,rectrange, found,min,max)
+        self.bottomleft:query_custom_by_rectangle(catagary_name,rectrange, found,min,max)
+        self.topleft:query_custom_by_rectangle(catagary_name,rectrange, found,min,max)
+    end
+    return found
+end
+
+function QuadTree:query_custom_by_point(catagary_name,point, radius, found,min,max)
+    found = found or {}
+    if not self:inner_point_contains(point, radius) then
+        return found
+    end
+    if self.custom_objects[catagary_name] then
+        for i, custom_object in ipairs(self.custom_objects[catagary_name]) do
+            table.insert(found, custom_object)
+        end
+    else
+        return found
+    end
+    if self.isdivided then
+        self.topright:query_custom_by_point(catagary_name,point, radius, found,min,max)
+        self.bottomright:query_custom_by_point(catagary_name,point, radius, found,min,max)
+        self.bottomleft:query_custom_by_point(catagary_name,point, radius, found,min,max)
+        self.topleft:query_custom_by_point(catagary_name,point, radius, found,min,max)
+    end
+    return found
+end
+
+
+
+function QuadTree:clear_custom(catagary_name)
+    self.custom_objects[catagary_name] = {}
+    if self.isdivided then
+        self.topright:clear_custom(catagary_name)
+        self.bottomright:clear_custom(catagary_name)
+        self.bottomleft:clear_custom(catagary_name)
+        self.topleft:clear_custom(catagary_name)
+    end
+end
+
+function QuadTree:clear_points()
+    self.points = {}
+    if self.isdivided then
+        self.topright:clear_points()
+        self.bottomright:clear_points()
+        self.bottomleft:clear_points()
+        self.topleft:clear_points()
+    end
+end
+function QuadTree:clear_circles()
+    self.circles = {}
+    if self.isdivided then
+        self.topright:clear_circles()
+        self.bottomright:clear_circles()
+        self.bottomleft:clear_circles()
+        self.topleft:clear_circles()
+    end
+end
+function QuadTree:clear_boxes()
+    self.boxes = {}
+    if self.isdivided then
+        self.topright:clear_boxes()
+        self.bottomright:clear_boxes()
+        self.bottomleft:clear_boxes()
+        self.topleft:clear_boxes()
+    end
+end
+function QuadTree:clear_boundingboxes()
+    self.boundingboxes = {}
+    if self.isdivided then
+        self.topright:clear_boundingboxes()
+        self.bottomright:clear_boundingboxes()
+        self.bottomleft:clear_boundingboxes()
+        self.topleft:clear_boundingboxes()
+    end
+end
+
+function QuadTree:clear_all()
+    self.points = {}
+    self.circles = {}
+    self.boxes = {}
+    self.boundingboxes = {}
+    self.custom_objects = {}
+    if self.isdivided then
+        self.topright:clear_all()
+        self.bottomright:clear_all()
+        self.bottomleft:clear_all()
+        self.topleft:clear_all()
+    end
 end

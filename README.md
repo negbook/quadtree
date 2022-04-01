@@ -9,6 +9,7 @@ client_script '@quadtree/quadtree.lua'
 
 ## Usage
 ```
+
 local tree = QuadTree.new({
     center = vector3(4000.0,4000.0,30.0),
     size = vector3(8000.0,8000.0,8000.0)
@@ -20,26 +21,14 @@ for i=1,1000 do
     local z = math.random(0,8000)
     tree:insert_point(vector3(x,y,z))
 end
-
 for i=1,1000 do 
     local x = math.random(0,8000)
     local y = math.random(0,8000)
     local z = math.random(0,8000)
-    tree:insert_box({
+    tree:insert_object("circle?",{
         center = vector3(x,y,z),
-        size = vector3(100,100,100),
-        somedata = "test"..i
-    })
-end
-
-for i=1,1000 do 
-    local x = math.random(0,8000)
-    local y = math.random(0,8000)
-    local z = math.random(0,8000)
-    tree:insert_circle({
-        center = vector3(x,y,z),
-        radius = 1000,
-        somedata = "asd"..i
+        size = vector3(1.0,1.0,1.0),
+        whatisthat = "circle"..(i)
     })
 end
 
@@ -64,47 +53,15 @@ print("point by point",#tree:query_points_by_point(vector3(1.0,1.0,30.0)))
 
 print("point by circle",#tree:query_points_by_point(vector3(1.0,1.0,30.0),100000))
 
-print("boxes by rectangle",#tree:query_boxes_by_rectangle({
+print("object by point",#tree:query_objects_by_point("circle?",vector3(1.0,1.0,30.0)))
+
+print("object by rectangle",#tree:query_objects_by_rectangle("circle?",{
     center = vector3(222.0,4000.0,30.0),
     size = vector3(400.0,400.0,400.0)
 }))
 
-print("boxes by point",#tree:query_boxes_by_point(vector3(1.0,1.0,30.0)))
-local boxes = tree:query_boxes_by_point(vector3(1.0,1.0,30.0))
-for i,v in pairs(boxes) do 
-    --print(v.somedata)
-end 
-
-print("boxes by circle",#tree:query_boxes_by_point(vector3(1.0,1.0,30.0),100000))
 
 
-print("circles by rectangle",#tree:query_circles_by_rectangle({
-    center = vector3(222.0,4000.0,30.0),
-    size = vector3(400.0,400.0,400.0)
-}))
-
-print("circles by point",#tree:query_circles_by_point(vector3(1.0,1.0,30.0)))
-
-print("circles by circle",#tree:query_circles_by_point(vector3(1.0,1.0,30.0),100000))
-
-for i=1,1000 do 
-    local x = math.random(0,8000)
-    local y = math.random(0,8000)
-    local z = math.random(0,8000)
-    tree:insert_boundingbox({
-        min = vector3(x-100,y-100,z-100),
-        max = vector3(x+100,y+100,z+100),
-        IamMinMaxBox = true
-    })
-end
-
-print("boundingboxes by point",#tree:query_boundingboxes_by_point(vector3(1.0,1.0,30.0),500))
-local boundingboxes = tree:query_boundingboxes_by_point(vector3(1.0,1.0,30.0))
-for i,v in pairs(boundingboxes) do 
-    if v.IamMinMaxBox then 
-        --print("boundingboxes",i)
-    end 
-end 
 ```
 
 Other Example relative Zones query

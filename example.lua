@@ -41,3 +41,12 @@ print("point by rectangle",#tree:query_points_by_rectangle({
 print("point by point",#tree:query_points_by_point(vector3(1.0,1.0,30.0)))
 
 print("point by circle",#tree:query_points_by_point(vector3(1.0,1.0,30.0),100000))
+
+print("object by point",#tree:query_objects_by_point("circle?",vector3(1.0,1.0,30.0)))
+
+print("object by rectangle",#tree:query_objects_by_rectangle("circle?",{
+    center = vector3(222.0,4000.0,30.0),
+    size = vector3(400.0,400.0,400.0)
+}))
+
+

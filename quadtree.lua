@@ -9,43 +9,9 @@ Contains = {
         local distance = #(vector2(pointA.x,pointA.y) - vector2(rectangle.center.x,rectangle.center.y))
         return distance <= radius and distance <= rectangle.size.x/2 and distance <= rectangle.size.y/2
     end,
-    pointtocircle = function(pointA,circle,radius)
-        local radius = radius or 0
-        local distance = #(vector2(pointA.x,pointA.y) - vector2(circle.center.x,circle.center.y))
-        return distance <= radius and distance <= circle.radius
-    end,
-    rectangletopoint = function(rectangleA,pointA,radius)
-        local radius = radius or 0
-        return pointA.x >= rectangleA.center.x - rectangleA.size.x/2 - radius and pointA.x <= rectangleA.center.x + rectangleA.size.x/2 + radius and pointA.y >= rectangleA.center.y - rectangleA.size.y/2 - radius and pointA.y <= rectangleA.center.y + rectangleA.size.y/2 + radius
-    end,
     rectangletorectangle = function(rectangleA,rectangleB,radius)
         local radius = radius or 0
         return rectangleA.center.x - rectangleA.size.x/2 - radius <= rectangleB.center.x + rectangleB.size.x/2 + radius and rectangleA.center.x + rectangleA.size.x/2 + radius >= rectangleB.center.x - rectangleB.size.x/2 - radius and rectangleA.center.y - rectangleA.size.y/2 - radius <= rectangleB.center.y + rectangleB.size.y/2 + radius and rectangleA.center.y + rectangleA.size.y/2 + radius >= rectangleB.center.y - rectangleB.size.y/2 - radius
-    end,
-    rectangletocircle = function(rectangle,circle,radius)
-        local radius = radius or 0
-        return rectangle.center.x - rectangle.size.x/2 - radius <= circle.center.x + circle.radius and rectangle.center.x + rectangle.size.x/2 + radius >= circle.center.x - circle.radius and rectangle.center.y - rectangle.size.y/2 - radius <= circle.center.y + circle.radius and rectangle.center.y + rectangle.size.y/2 + radius >= circle.center.y - circle.radius
-    end,
-    circletopoint = function(circle,pointA,radius)
-        local radius = radius or 0
-        local distance = #(vector2(pointA.x,pointA.y) - vector2(circle.center.x,circle.center.y))
-        return distance <= radius and distance <= circle.radius
-    end,
-    circletorectangle = function(circle,rectangle,radius)
-        local radius = radius or 0
-        return circle.center.x - circle.radius <= rectangle.center.x + rectangle.size.x/2 + radius and circle.center.x + circle.radius >= rectangle.center.x - rectangle.size.x/2 - radius and circle.center.y - circle.radius <= rectangle.center.y + rectangle.size.y/2 + radius and circle.center.y + circle.radius >= rectangle.center.y - rectangle.size.y/2 - radius
-    end,
-    circletocircle = function(circleA,circleB,radius)
-        local radius = radius or 0
-        return #(vector2(circleA.center.x,circleA.center.y) - vector2(circleB.center.x,circleB.center.y)) <= circleA.radius + circleB.radius
-    end,
-    boundingboxtopoint = function(boundingbox,pointA,radius)
-        local radius = radius or 0
-        return pointA.x >= boundingbox.min.x - radius and pointA.x <= boundingbox.max.x + radius and pointA.y >= boundingbox.min.y - radius and pointA.y <= boundingbox.max.y + radius
-    end,
-    boundingboxtorectangle = function(boundingbox,rectangle,radius)
-        local radius = radius or 0
-        return boundingbox.min.x - radius <= rectangle.center.x + rectangle.size.x/2 + radius and boundingbox.max.x + radius >= rectangle.center.x - rectangle.size.x/2 - radius and boundingbox.min.y - radius <= rectangle.center.y + rectangle.size.y/2 + radius and boundingbox.max.y + radius >= rectangle.center.y - rectangle.size.y/2 - radius
     end,
 }
 
@@ -296,7 +262,7 @@ function QuadTree:query_objects_by_point(catagary_name,point, radius, found)
     end
     if self.objects[catagary_name] then
         for i, object in ipairs(self.objects[catagary_name]) do
-            if Contains.boundingboxtopoint(object, point, radius) then
+            if Contains.pointtorectangle(point, object, radius) then
                 table.insert(found, object)
             end
         end

@@ -22,13 +22,23 @@ local Contains = {
         local rectanglecenter = rectangle.center
         local rectanglecenterx = rectanglecenter.x
         local rectanglecentery = rectanglecenter.y
-        local rectanglesize = rectangle.size
-        local rectanglehalfwidth =  rectanglesize.x/2
-        local rectanglehalfheight = rectanglesize.y/2
-        local pointAx = pointA.x
-        local pointAy = pointA.y
-        --return pointA.x >= rectangle.center.x - rectangle.size.x/2 - radius and pointA.x <= rectangle.center.x + rectangle.size.x/2 + radius and pointA.y >= rectangle.center.y - rectangle.size.y/2 - radius and pointA.y <= rectangle.center.y + rectangle.size.y/2 + radius
-        return pointAx >= rectanglecenterx - rectanglehalfwidth - radius and pointAx <= rectanglecenterx + rectanglehalfwidth + radius and pointAy >= rectanglecentery - rectanglehalfheight - radius and pointAy <= rectanglecentery + rectanglehalfheight + radius
+        if rectangle.min == nil then 
+            local rectanglesize = rectangle.size
+            local rectanglehalfwidth =  rectanglesize.x/2
+            local rectanglehalfheight = rectanglesize.y/2
+            local pointAx = pointA.x
+            local pointAy = pointA.y
+            --return pointA.x >= rectangle.center.x - rectangle.size.x/2 - radius and pointA.x <= rectangle.center.x + rectangle.size.x/2 + radius and pointA.y >= rectangle.center.y - rectangle.size.y/2 - radius and pointA.y <= rectangle.center.y + rectangle.size.y/2 + radius
+            return pointAx >= rectanglecenterx - rectanglehalfwidth - radius and pointAx <= rectanglecenterx + rectanglehalfwidth + radius and pointAy >= rectanglecentery - rectanglehalfheight - radius and pointAy <= rectanglecentery + rectanglehalfheight + radius
+        elseif rectangle.max then 
+            local pointAx = pointA.x
+            local pointAy = pointA.y
+            local rectangleminx = rectangle.min.x
+            local rectangleminy = rectangle.min.y
+            local rectanglemaxx = rectangle.max.x
+            local rectanglemaxy = rectangle.max.y
+            return pointAx >= rectangleminx - radius and pointAx <= rectanglemaxx + radius and pointAy >= rectangleminy - radius and pointAy <= rectanglemaxy + radius
+        end
     end,
     rectangletorectangle = function(rectangleA,rectangleB,radius)
         local radius = radius or 0
@@ -249,23 +259,37 @@ end
 
 function QuadTree:inner_object_contains(object)
     local center = object.center 
-    local size = object.size
-    local objectcenterx = center.x
-    local objectcentery = center.y
-    local objecthalfsizex = size.x/2
-    local objecthalfsizey = size.y/2
-    local selfcenter = self.center
-    local selfsize = self.size
-    local selfcenterx = selfcenter.x
-    local selfcentery = selfcenter.y
-    local selfhalfsizex = selfsize.x/2
-    local selfhalfsizey = selfsize.y/2
+    if object.min == nil then 
+        local size = object.size
+        local objectcenterx = center.x
+        local objectcentery = center.y
+        local objecthalfsizex = size.x/2
+        local objecthalfsizey = size.y/2
+        local selfcenter = self.center
+        local selfsize = self.size
+        local selfcenterx = selfcenter.x
+        local selfcentery = selfcenter.y
+        local selfhalfsizex = selfsize.x/2
+        local selfhalfsizey = selfsize.y/2
 
-    --return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2
-    return objectcenterx - objecthalfsizex <= selfcenterx + selfhalfsizex and
-        objectcenterx + objecthalfsizex >= selfcenterx - selfhalfsizex and
-        objectcentery - objecthalfsizey <= selfcentery + selfhalfsizey and
-        objectcentery + objecthalfsizey >= selfcentery - selfhalfsizey
+        --return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2
+        return objectcenterx - objecthalfsizex <= selfcenterx + selfhalfsizex and
+            objectcenterx + objecthalfsizex >= selfcenterx - selfhalfsizex and
+            objectcentery - objecthalfsizey <= selfcentery + selfhalfsizey and
+            objectcentery + objecthalfsizey >= selfcentery - selfhalfsizey
+    elseif object.max then  
+        local min = object.min
+        local max = object.max
+        local objectminx = min.x
+        local objectminy = min.y
+        local objectmaxx = max.x
+        local objectmaxy = max.y
+        local selfmaxx = self.size.x/2
+        local selfmaxy = self.size.y/2
+        local selfminx = -selfmaxx
+        local selfminy = -selfmaxy
+        return objectminx >= selfminx and objectminy >= selfminy and objectmaxx <= selfmaxx and objectmaxy <= selfmaxy
+    end 
 end
 
 function QuadTree:insert_object(catagary_name,object)

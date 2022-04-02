@@ -1,3 +1,16 @@
+local setmetatable = setmetatable
+local DrawLine = DrawLine
+local GetEntityCoords = GetEntityCoords
+local Wait = Wait
+local CreateThread = CreateThread
+local table = table
+local ipairs = ipairs
+local math = math
+local GetPlayerPed = GetPlayerPed
+local GetEntityCoords = GetEntityCoords
+local vector3 = vector3
+local vector2 = vector2
+
 QuadTree = {}
 local Contains = {
     pointtopoint = function(pointA,pointB,radius)
@@ -6,11 +19,33 @@ local Contains = {
     end,
     pointtorectangle = function(pointA,rectangle,radius)
         local radius = radius or 0
-        return pointA.x >= rectangle.center.x - rectangle.size.x/2 - radius and pointA.x <= rectangle.center.x + rectangle.size.x/2 + radius and pointA.y >= rectangle.center.y - rectangle.size.y/2 - radius and pointA.y <= rectangle.center.y + rectangle.size.y/2 + radius
+        local rectanglecenter = rectangle.center
+        local rectanglecenterx = rectanglecenter.x
+        local rectanglecentery = rectanglecenter.y
+        local rectanglesize = rectangle.size
+        local rectanglehalfwidth =  rectanglesize.x/2
+        local rectanglehalfheight = rectanglesize.y/2
+        local pointAx = pointA.x
+        local pointAy = pointA.y
+        --return pointA.x >= rectangle.center.x - rectangle.size.x/2 - radius and pointA.x <= rectangle.center.x + rectangle.size.x/2 + radius and pointA.y >= rectangle.center.y - rectangle.size.y/2 - radius and pointA.y <= rectangle.center.y + rectangle.size.y/2 + radius
+        return pointAx >= rectanglecenterx - rectanglehalfwidth - radius and pointAx <= rectanglecenterx + rectanglehalfwidth + radius and pointAy >= rectanglecentery - rectanglehalfheight - radius and pointAy <= rectanglecentery + rectanglehalfheight + radius
     end,
     rectangletorectangle = function(rectangleA,rectangleB,radius)
         local radius = radius or 0
-        return rectangleA.center.x - rectangleA.size.x/2 - radius <= rectangleB.center.x + rectangleB.size.x/2 + radius and rectangleA.center.x + rectangleA.size.x/2 + radius >= rectangleB.center.x - rectangleB.size.x/2 - radius and rectangleA.center.y - rectangleA.size.y/2 - radius <= rectangleB.center.y + rectangleB.size.y/2 + radius and rectangleA.center.y + rectangleA.size.y/2 + radius >= rectangleB.center.y - rectangleB.size.y/2 - radius
+        local rectangleAcenter = rectangleA.center
+        local rectangleAcenterx = rectangleAcenter.x
+        local rectangleAcentery = rectangleAcenter.y
+        local rectangleAsize = rectangleA.size
+        local rectangleAhalfwidth =  rectangleAsize.x/2
+        local rectangleAhalfheight = rectangleAsize.y/2
+        local rectangleBcenter = rectangleB.center
+        local rectangleBcenterx = rectangleBcenter.x
+        local rectangleBcentery = rectangleBcenter.y
+        local rectangleBsize = rectangleB.size
+        local rectangleBhalfwidth =  rectangleBsize.x/2
+        local rectangleBhalfheight = rectangleBsize.y/2
+        --return rectangleA.center.x - rectangleA.size.x/2 - radius <= rectangleB.center.x + rectangleB.size.x/2 + radius and rectangleA.center.x + rectangleA.size.x/2 + radius >= rectangleB.center.x - rectangleB.size.x/2 - radius and rectangleA.center.y - rectangleA.size.y/2 - radius <= rectangleB.center.y + rectangleB.size.y/2 + radius and rectangleA.center.y + rectangleA.size.y/2 + radius >= rectangleB.center.y - rectangleB.size.y/2 - radius
+        return rectangleAcenterx - rectangleAhalfwidth - radius <= rectangleBcenterx + rectangleBhalfwidth + radius and rectangleAcenterx + rectangleAhalfwidth + radius >= rectangleBcenterx - rectangleBhalfwidth - radius and rectangleAcentery - rectangleAhalfheight - radius <= rectangleBcentery + rectangleBhalfheight + radius and rectangleAcentery + rectangleAhalfheight + radius >= rectangleBcentery - rectangleBhalfheight - radius
     end,
 }
 
@@ -47,42 +82,77 @@ end
 
 function QuadTree:inner_subdivide()
     local parentcenter = self.center
-    local parentwidth = self.size.x
-    local parentheight = self.size.y
+    local parentsize = self.size
+    local parentwidth =  parentsize.x
+    local parentheight = parentsize.y
+    local parentcenterx = parentcenter.x
+    local parentcentery = parentcenter.y
     local childwidth = parentwidth/2
     local childheight = parentheight/2
+    local childhalfwidth = childwidth/2
+    local childhalfheight = childheight/2
+    
+    local toleftX = parentcenterx - childhalfwidth
+    local torightX = parentcenterx + childhalfwidth
+    local toupY = parentcentery - childhalfheight
+    local todownY = parentcentery + childhalfheight
+
+    local childsize = vector2(childwidth, childheight)
+    local parentcapacity = self.capacity
 
     --create new quadtrees in 4 sub-regions
     self.topright = QuadTree.new({
-        center = vector2(parentcenter.x + childwidth/2, parentcenter.y - childheight/2),
-        size = vector2(childwidth, childheight)
-    }, self.capacity)
+        center = vector2(torightX, toupY),
+        size = childsize
+    }, parentcapacity)
     self.bottomright = QuadTree.new({
-        center = vector2(parentcenter.x + childwidth/2, parentcenter.y + childheight/2),
-        size = vector2(childwidth, childheight)
-    }, self.capacity)
+        center = vector2(torightX, todownY),
+        size = childsize
+    }, parentcapacity)
     self.bottomleft = QuadTree.new({
-        center = vector2(parentcenter.x - childwidth/2, parentcenter.y + childheight/2),
-        size = vector2(childwidth, childheight)
-    }, self.capacity)
+        center = vector2(toleftX, todownY),
+        size = childsize
+    }, parentcapacity)
     self.topleft = QuadTree.new({
-        center = vector2(parentcenter.x - childwidth/2, parentcenter.y - childheight/2),
-        size = vector2(childwidth, childheight)
-    }, self.capacity)
+        center = vector2(toleftX, toupY),
+        size = childsize
+    }, parentcapacity)
 
     self.isdivided = true
         
 end
 
-function QuadTree:inner_intersects(rectrange)
-    local rectcenter = rectrange.center
-    local rectsize = rectrange.size
-    return not (rectcenter.x + rectsize.x/2 < self.center.x - self.size.x/2 or rectcenter.x - rectsize.x/2 > self.center.x + self.size.x/2 or rectcenter.y + rectsize.y/2 < self.center.y - self.size.y/2 or rectcenter.y - rectsize.y/2 > self.center.y + self.size.y/2)
+function QuadTree:inner_intersects(rectangle)
+    local rectcenter = rectangle.center
+    local rectcenterx = rectcenter.x
+    local rectcentery = rectcenter.y
+    local selfcenter = self.center
+    local selfcenterx = selfcenter.x
+    local selfcentery = selfcenter.y
+    local recthalfsize = rectangle.size/2
+    local selfhalfsize = self.size/2
+    local recthalfsizex = recthalfsize.x
+    local recthalfsizey = recthalfsize.y
+    local selfhalfsizex = selfhalfsize.x
+    local selfhalfsizey = selfhalfsize.y
+    local isrectanglein = 
+        rectcenterx - recthalfsizex <= selfcenterx + selfhalfsizex and
+        rectcenterx + recthalfsizex >= selfcenterx - selfhalfsizex and
+        rectcentery - recthalfsizey <= selfcentery + selfhalfsizey and
+        rectcentery + recthalfsizey >= selfcentery - selfhalfsizey
+    return isrectanglein
 end
 
 function QuadTree:inner_point_contains (point, radius)
     local radius = radius or 0.0
-    return point.x + radius >= self.center.x - self.size.x/2 and point.x - radius <= self.center.x + self.size.x/2 and point.y + radius >= self.center.y - self.size.y/2 and point.y - radius <= self.center.y + self.size.y/2
+    local selfcenter = self.center
+    local selfcenterx = selfcenter.x
+    local selfcentery = selfcenter.y
+    local selfhalfsize = self.size/2
+    local pointx = point.x
+    local pointy = point.y
+    --return point.x + radius >= self.center.x - self.size.x/2 and point.x - radius <= self.center.x + self.size.x/2 and point.y + radius >= self.center.y - self.size.y/2 and point.y - radius <= self.center.y + self.size.y/2
+    return pointx + radius >= selfcenterx - selfhalfsize.x and pointx - radius <= selfcenterx + selfhalfsize.x and pointy + radius >= selfcentery - selfhalfsize.y and pointy - radius <= selfcentery + selfhalfsize.y
 end
 
 function QuadTree:insert_point(point)
@@ -180,7 +250,22 @@ end
 function QuadTree:inner_object_contains(object)
     local center = object.center 
     local size = object.size
-    return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2
+    local objectcenterx = center.x
+    local objectcentery = center.y
+    local objecthalfsizex = size.x/2
+    local objecthalfsizey = size.y/2
+    local selfcenter = self.center
+    local selfsize = self.size
+    local selfcenterx = selfcenter.x
+    local selfcentery = selfcenter.y
+    local selfhalfsizex = selfsize.x/2
+    local selfhalfsizey = selfsize.y/2
+
+    --return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2
+    return objectcenterx - objecthalfsizex <= selfcenterx + selfhalfsizex and
+        objectcenterx + objecthalfsizex >= selfcenterx - selfhalfsizex and
+        objectcentery - objecthalfsizey <= selfcentery + selfhalfsizey and
+        objectcentery + objecthalfsizey >= selfcentery - selfhalfsizey
 end
 
 function QuadTree:insert_object(catagary_name,object)
@@ -366,3 +451,4 @@ function QuadTree:Debug(freezeZ)
         end
     end)
 end
+

@@ -213,8 +213,8 @@ function QuadTree:update_point(point)
     self:insert_point(point)
 end
 
-function QuadTree:query_points_by_rectangle(rectrange)
-    local found = found or {}
+function QuadTree:query_points_by_rectangle(rectrange, found)
+    found = found or {}
     if not self:inner_intersects(rectrange) then
         return found
     end
@@ -224,17 +224,17 @@ function QuadTree:query_points_by_rectangle(rectrange)
         end
     end
     if self.isdivided then
-        table.insert(found,self.topright:query_points_by_rectangle(rectrange))
-        table.insert(found,self.bottomright:query_points_by_rectangle(rectrange))
-        table.insert(found,self.bottomleft:query_points_by_rectangle(rectrange))
-        table.insert(found,self.topleft:query_points_by_rectangle(rectrange))
+        self.topright:query_points_by_rectangle(rectrange, found)
+        self.bottomright:query_points_by_rectangle(rectrange, found)
+        self.bottomleft:query_points_by_rectangle(rectrange, found)
+        self.topleft:query_points_by_rectangle(rectrange, found)
     end
     return found
 end
 
 
-function QuadTree:query_points_by_point(point, radius)
-    local found = found or {}
+function QuadTree:query_points_by_point(point, radius, found)
+    found = found or {}
     if not self:inner_point_contains(point, radius) then
         return found
     end
@@ -244,10 +244,10 @@ function QuadTree:query_points_by_point(point, radius)
         end
     end
     if self.isdivided then
-        table.insert(self.topright:query_points_by_point(point, radius))
-        table.insert(self.bottomright:query_points_by_point(point, radius))
-        table.insert(self.bottomleft:query_points_by_point(point, radius))
-        table.insert(self.topleft:query_points_by_point(point, radius))
+        self.topright:query_points_by_point(point, radius, found)
+        self.bottomright:query_points_by_point(point, radius, found)
+        self.bottomleft:query_points_by_point(point, radius, found)
+        self.topleft:query_points_by_point(point, radius, found)
     end
     return found
 end

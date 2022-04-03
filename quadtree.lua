@@ -22,6 +22,16 @@ local Contains = {
         local rectanglecenter = rectangle.center
         local rectanglecenterx = rectanglecenter.x
         local rectanglecentery = rectanglecenter.y
+        if rectangle.getminmax then 
+            local rectanglemin,rectanglemax = rectangle.getminmax()
+            local pointAx = pointA.x
+            local pointAy = pointA.y
+            local rectangleminx = rectanglemin.x
+            local rectangleminy = rectanglemin.y
+            local rectanglemaxx = rectanglemax.x
+            local rectanglemaxy = rectanglemax.y
+            return pointAx >= rectangleminx - radius and pointAx <= rectanglemaxx + radius and pointAy >= rectangleminy - radius and pointAy <= rectanglemaxy + radius
+        end 
         if rectangle.min == nil then 
             local rectanglesize = rectangle.size
             local rectanglehalfwidth =  rectanglesize.x/2
@@ -259,6 +269,18 @@ end
 
 function QuadTree:inner_object_contains(object)
     local center = object.center 
+    if object.getminmax then 
+        local min,max = object.getminmax()
+        local objectminx = min.x
+        local objectminy = min.y
+        local objectmaxx = max.x
+        local objectmaxy = max.y
+        local selfmaxx = self.size.x/2
+        local selfmaxy = self.size.y/2
+        local selfminx = -selfmaxx
+        local selfminy = -selfmaxy
+        return objectminx >= selfminx and objectminy >= selfminy and objectmaxx <= selfmaxx and objectmaxy <= selfmaxy
+    end     
     if object.min == nil then 
         local size = object.size
         local objectcenterx = center.x

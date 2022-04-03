@@ -19,9 +19,16 @@ local Contains = {
     end,
     pointtorectangle = function(pointA,rectangle,radius)
         local radius = radius or 0
-        local rectanglecenter = rectangle.center
-        local rectanglecenterx = rectanglecenter.x
-        local rectanglecentery = rectanglecenter.y
+        local rectanglecenter  
+        local rectanglecenterx 
+        local rectanglecentery 
+        if rectangle.getcenter then 
+            rectanglecenter = rectangle.getcenter()
+            rectanglecenterx , rectanglecentery = rectanglecenter.x, rectanglecenter.y
+        else 
+            rectanglecenter = rectangle.center
+            rectanglecenterx , rectanglecentery = rectanglecenter.x, rectanglecenter.y
+        end
         if rectangle.getminmax then 
             local rectanglemin,rectanglemax = rectangle.getminmax()
             local pointAx = pointA.x
@@ -30,6 +37,7 @@ local Contains = {
             local rectangleminy = rectanglemin.y
             local rectanglemaxx = rectanglemax.x
             local rectanglemaxy = rectanglemax.y
+            
             return pointAx >= rectangleminx - radius and pointAx <= rectanglemaxx + radius and pointAy >= rectangleminy - radius and pointAy <= rectanglemaxy + radius
         end 
         if rectangle.min == nil then 
@@ -50,23 +58,7 @@ local Contains = {
             return pointAx >= rectangleminx - radius and pointAx <= rectanglemaxx + radius and pointAy >= rectangleminy - radius and pointAy <= rectanglemaxy + radius
         end
     end,
-    rectangletorectangle = function(rectangleA,rectangleB,radius)
-        local radius = radius or 0
-        local rectangleAcenter = rectangleA.center
-        local rectangleAcenterx = rectangleAcenter.x
-        local rectangleAcentery = rectangleAcenter.y
-        local rectangleAsize = rectangleA.size
-        local rectangleAhalfwidth =  rectangleAsize.x/2
-        local rectangleAhalfheight = rectangleAsize.y/2
-        local rectangleBcenter = rectangleB.center
-        local rectangleBcenterx = rectangleBcenter.x
-        local rectangleBcentery = rectangleBcenter.y
-        local rectangleBsize = rectangleB.size
-        local rectangleBhalfwidth =  rectangleBsize.x/2
-        local rectangleBhalfheight = rectangleBsize.y/2
-        --return rectangleA.center.x - rectangleA.size.x/2 - radius <= rectangleB.center.x + rectangleB.size.x/2 + radius and rectangleA.center.x + rectangleA.size.x/2 + radius >= rectangleB.center.x - rectangleB.size.x/2 - radius and rectangleA.center.y - rectangleA.size.y/2 - radius <= rectangleB.center.y + rectangleB.size.y/2 + radius and rectangleA.center.y + rectangleA.size.y/2 + radius >= rectangleB.center.y - rectangleB.size.y/2 - radius
-        return rectangleAcenterx - rectangleAhalfwidth - radius <= rectangleBcenterx + rectangleBhalfwidth + radius and rectangleAcenterx + rectangleAhalfwidth + radius >= rectangleBcenterx - rectangleBhalfwidth - radius and rectangleAcentery - rectangleAhalfheight - radius <= rectangleBcentery + rectangleBhalfheight + radius and rectangleAcentery + rectangleAhalfheight + radius >= rectangleBcentery - rectangleBhalfheight - radius
-    end,
+    
 }
 
 
@@ -76,17 +68,9 @@ function QuadTree.new(boundary, capacity)
         size = boundary.size,
         capacity = capacity or 4,
         points = {},
-        objects = {},
         isdivided = false,
         isinquery = false,
     }
-    setmetatable(o.objects,{__tostring = function(t) 
-        local r = ""
-        for i,v in pairs(t) do 
-            r = r .. i.."("..#v..")" .. " "
-        end 
-        return r
-    end})
     return setmetatable(
         o, {
         __index = QuadTree,
@@ -94,7 +78,7 @@ function QuadTree.new(boundary, capacity)
             return "QuadTree: center: "..self.center.x.." "..self.center.y..
             " width: "..self.size.x.." height: "..self.size.y..
             " capacity: "..self.capacity.." points: "..#self.points..
-              " isdivided: "..tostring(self.isdivided).."\nobjects: "..tostring(self.objects)
+              " isdivided: "..tostring(self.isdivided)
             
         end
     })
@@ -177,6 +161,7 @@ end
 
 function QuadTree:insert_point(point)
     if not self:inner_point_contains(point) then
+        
         return false
     end
     if #self.points < self.capacity then
@@ -228,8 +213,8 @@ function QuadTree:update_point(point)
     self:insert_point(point)
 end
 
-function QuadTree:query_points_by_rectangle(rectrange, found)
-    found = found or {}
+function QuadTree:query_points_by_rectangle(rectrange)
+    local found = found or {}
     if not self:inner_intersects(rectrange) then
         return found
     end
@@ -239,17 +224,17 @@ function QuadTree:query_points_by_rectangle(rectrange, found)
         end
     end
     if self.isdivided then
-        self.topright:query_points_by_rectangle(rectrange, found)
-        self.bottomright:query_points_by_rectangle(rectrange, found)
-        self.bottomleft:query_points_by_rectangle(rectrange, found)
-        self.topleft:query_points_by_rectangle(rectrange, found)
+        table.insert(found,self.topright:query_points_by_rectangle(rectrange))
+        table.insert(found,self.bottomright:query_points_by_rectangle(rectrange))
+        table.insert(found,self.bottomleft:query_points_by_rectangle(rectrange))
+        table.insert(found,self.topleft:query_points_by_rectangle(rectrange))
     end
     return found
 end
 
 
-function QuadTree:query_points_by_point(point, radius, found)
-    found = found or {}
+function QuadTree:query_points_by_point(point, radius)
+    local found = found or {}
     if not self:inner_point_contains(point, radius) then
         return found
     end
@@ -259,165 +244,13 @@ function QuadTree:query_points_by_point(point, radius, found)
         end
     end
     if self.isdivided then
-        self.topright:query_points_by_point(point, radius, found)
-        self.bottomright:query_points_by_point(point, radius, found)
-        self.bottomleft:query_points_by_point(point, radius, found)
-        self.topleft:query_points_by_point(point, radius, found)
+        table.insert(self.topright:query_points_by_point(point, radius))
+        table.insert(self.bottomright:query_points_by_point(point, radius))
+        table.insert(self.bottomleft:query_points_by_point(point, radius))
+        table.insert(self.topleft:query_points_by_point(point, radius))
     end
     return found
 end
-
-function QuadTree:inner_object_contains(object)
-    local center = object.center 
-    if object.getminmax then 
-        local min,max = object.getminmax()
-        local objectminx = min.x
-        local objectminy = min.y
-        local objectmaxx = max.x
-        local objectmaxy = max.y
-        local selfmaxx = self.size.x/2
-        local selfmaxy = self.size.y/2
-        local selfminx = -selfmaxx
-        local selfminy = -selfmaxy
-        return objectminx >= selfminx and objectminy >= selfminy and objectmaxx <= selfmaxx and objectmaxy <= selfmaxy
-    end     
-    if object.min == nil then 
-        local size = object.size
-        local objectcenterx = center.x
-        local objectcentery = center.y
-        local objecthalfsizex = size.x/2
-        local objecthalfsizey = size.y/2
-        local selfcenter = self.center
-        local selfsize = self.size
-        local selfcenterx = selfcenter.x
-        local selfcentery = selfcenter.y
-        local selfhalfsizex = selfsize.x/2
-        local selfhalfsizey = selfsize.y/2
-
-        --return center.x - size.x/2 >= self.center.x - self.size.x/2 and center.x + size.x/2 <= self.center.x + self.size.x/2 and center.y - size.y/2 >= self.center.y - self.size.y/2 and center.y + size.y/2 <= self.center.y + self.size.y/2
-        return objectcenterx - objecthalfsizex <= selfcenterx + selfhalfsizex and
-            objectcenterx + objecthalfsizex >= selfcenterx - selfhalfsizex and
-            objectcentery - objecthalfsizey <= selfcentery + selfhalfsizey and
-            objectcentery + objecthalfsizey >= selfcentery - selfhalfsizey
-    elseif object.max then  
-        local min = object.min
-        local max = object.max
-        local objectminx = min.x
-        local objectminy = min.y
-        local objectmaxx = max.x
-        local objectmaxy = max.y
-        local selfmaxx = self.size.x/2
-        local selfmaxy = self.size.y/2
-        local selfminx = -selfmaxx
-        local selfminy = -selfmaxy
-        return objectminx >= selfminx and objectminy >= selfminy and objectmaxx <= selfmaxx and objectmaxy <= selfmaxy
-    end 
-end
-
-function QuadTree:insert_object(catagary_name,object)
-    if not self:inner_object_contains(object) then
-        return false
-    end
-    if not self.objects[catagary_name] then
-        self.objects[catagary_name] = {}
-    end
-    if #self.objects[catagary_name] < self.capacity then
-        table.insert(self.objects[catagary_name], object)
-        return true
-    else 
-        if not self.isdivided then
-            self:inner_subdivide()
-        end
-        if self.topright:insert_object(catagary_name,object) then
-            return true
-        elseif self.bottomright:insert_object(catagary_name,object) then
-            return true
-        elseif self.bottomleft:insert_object(catagary_name,object) then
-            return true
-        elseif self.topleft:insert_object(catagary_name,object) then
-            return true
-        end
-    end
-end
-
-function QuadTree:remove_object(catagary_name,object)
-    if not self:inner_object_contains(object) then
-        return false
-    end
-    if self.objects[catagary_name] then
-        for i, v in ipairs(self.objects[catagary_name]) do
-            if v == object then
-                table.remove(self.objects[catagary_name], i)
-                return true
-            end
-        end
-    else 
-        return false
-    end
-    if self.isdivided then
-        if self.topright:remove_object(catagary_name,object) then
-            return true
-        elseif self.bottomright:remove_object(catagary_name,object) then
-            return true
-        elseif self.bottomleft:remove_object(catagary_name,object) then
-            return true
-        elseif self.topleft:remove_object(catagary_name,object) then
-            return true
-        end
-    end
-end
-
-function QuadTree:update_object(catagary_name,object)
-    self:remove_object(catagary_name,object)
-    self:insert_object(catagary_name,object)
-end
-
-function QuadTree:query_objects_by_rectangle(catagary_name,rectrange, found)
-    found = found or {}
-    if not self:inner_intersects(rectrange) then
-        return found
-    end
-    if self.objects[catagary_name] then
-        for i, object in ipairs(self.objects[catagary_name]) do
-            if Contains.rectangletorectangle(object, rectrange) then
-                table.insert(found, object)
-            end
-        end
-    else 
-        return found
-    end
-    if self.isdivided then
-        self.topright:query_objects_by_rectangle(catagary_name,rectrange, found)
-        self.bottomright:query_objects_by_rectangle(catagary_name,rectrange, found)
-        self.bottomleft:query_objects_by_rectangle(catagary_name,rectrange, found)
-        self.topleft:query_objects_by_rectangle(catagary_name,rectrange, found)
-    end
-    return found
-end
-
-function QuadTree:query_objects_by_point(catagary_name, point, radius, found)
-    found = found or {}
-    if not self:inner_point_contains(point, radius) then
-        return found
-    end
-    if self.objects[catagary_name] then
-        for i, object in ipairs(self.objects[catagary_name]) do
-            if Contains.pointtorectangle(point, object, radius) then
-                table.insert(found, object)
-            end
-        end
-    else
-        return found
-    end
-    if self.isdivided then
-        self.topright:query_objects_by_point(catagary_name,point, radius, found)
-        self.bottomright:query_objects_by_point(catagary_name,point, radius, found)
-        self.bottomleft:query_objects_by_point(catagary_name,point, radius, found)
-        self.topleft:query_objects_by_point(catagary_name,point, radius, found)
-    end
-    return found
-end
-
 
 function QuadTree:clear_points()
     self.points = {}
@@ -426,27 +259,6 @@ function QuadTree:clear_points()
         self.bottomright:clear_points()
         self.bottomleft:clear_points()
         self.topleft:clear_points()
-    end
-end
-
-function QuadTree:clear_objects(catagary_name)
-    self.objects[catagary_name] = {}
-    if self.isdivided then
-        self.topright:clear_object(catagary_name)
-        self.bottomright:clear_object(catagary_name)
-        self.bottomleft:clear_object(catagary_name)
-        self.topleft:clear_object(catagary_name)
-    end
-end
-
-function QuadTree:clear_all()
-    self.points = {}
-    self.objects = {}
-    if self.isdivided then
-        self.topright:clear_all()
-        self.bottomright:clear_all()
-        self.bottomleft:clear_all()
-        self.topleft:clear_all()
     end
 end
 
@@ -473,14 +285,7 @@ function QuadTree:DrawGrids(freezeZ)
                 DrawLine(point.x,point.y,drawz,point.x,point.y,drawz+2^10,r,g,255,a)
             end
         end
-        for i,v in pairs(self.objects) do 
-            if v[1] then
-                for i, obj in ipairs(v) do
-                    local center = obj.center 
-                    DrawLine(center.x,center.y,drawz,center.x,center.y,drawz+2^10,255,0,255,255)
-                end
-            end
-        end
+
     if self.isdivided then
         self.topright:DrawGrids(freezeZ)
         self.bottomright:DrawGrids(freezeZ)
